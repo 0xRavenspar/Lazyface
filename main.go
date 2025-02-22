@@ -1,14 +1,11 @@
 package main
 
 import (
+	"Lazyface/internal/cli"
 	"fmt"
-	"lazyface-priv/cmd"
-	"os"
-
-	tea "github.com/charmbracelet/bubbletea"
 )
 
-func main(){
+func main() {
 	token := ""
 	addGitCredential := true
 
