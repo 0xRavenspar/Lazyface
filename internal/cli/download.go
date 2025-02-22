@@ -48,18 +48,23 @@ func ListRepoFiles(repoID string) ([]string, error) {
 	return files, nil
 }
 
-func GetDownloadPath(choice string, userPath string) (string, error) {
+func GetDownloadPath(choice string, userPath string, repoId string) (string, error) {
 	switch choice {
-	case "default":
+	case "Downloads":
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			return "", fmt.Errorf("failed to get home directory: %w", err)
 		}
-		downloadPath := filepath.Join(homeDir, "Downloads", "hfmodels")
+		downloadPath := filepath.Join(homeDir, "Downloads", "hfmodels", repoId)
 		return downloadPath, nil
 
-	case "pwd":
-		return os.Getwd()
+	case "Current Directory":
+		currentDir, err := os.Getwd()
+		if err != nil {
+			return "", fmt.Errorf("failed to get current directory: %w", err)
+		}
+		downloadPath := filepath.Join(currentDir, "hfmodels", repoId)
+		return downloadPath, nil
 	case "custom":
 		if userPath == "" {
 			return "", fmt.Errorf("no custom path provided")
@@ -99,4 +104,3 @@ func Download(repoID string, files []string, downloadPath string, updateStatus f
 	updateProgress(1.0)
 	return nil
 }
-

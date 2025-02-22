@@ -1,38 +1,20 @@
 package main
 
 import (
-	"Lazyface/internal/cli"
+	"Lazyface/cmd"
 	"fmt"
+	"os"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
-	token := ""
-	addGitCredential := true
 
-	err := cli.Login(token, addGitCredential)
-	if err != nil {
-		fmt.Println("Error: ", err)
-	} else {
-		fmt.Println("Login completed successfully")
+	p := tea.NewProgram(cmd.InitialModel())
+
+	if err := p.Start(); err != nil {
+		fmt.Println("Error starting tje TUI: ", err)
+		os.Exit(1)
 	}
 
-	repoID := "deepseek-ai/DeepSeek-R1"
-
-	fmt.Println("Listing files in repo: ", repoID)
-	files, err := cli.ListRepoFiles(repoID)
-	if err != nil {
-		fmt.Println("Error: ", err)
-	} else {
-		fmt.Println("Files in repo: ")
-		for _, file := range files {
-			fmt.Println("-", file)
-		}
-	}
-
-	err = cli.Logout()
-	if err != nil {
-		fmt.Println("Error: ", err)
-	} else {
-		fmt.Println("Logout success")
-	}
 }
