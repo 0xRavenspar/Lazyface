@@ -3,6 +3,7 @@ package cmd
 import (
 	"Lazyface/internal/cli"
 	"fmt"
+	"strconv"
 
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -47,7 +48,7 @@ type model struct {
 }
 
 // Initialize the model
-func InitialModel() model {
+func InitialDownloadModel() model {
 	ti := textinput.New()
 	ti.Placeholder = "Enter Hugging Face repo name"
 	ti.Focus()
@@ -283,7 +284,7 @@ func generateColumns(files []string, checked map[int]bool, cursor int, scrollOff
 
 	columnStrings := make([]string, 0, maxVisibleColumns)
 
-	cursorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FFD700"))
+	cursorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#f88e64"))
 
 	for col := scrollOffset; col < visibleEnd; col++ {
 		start := col * filesPerColumn
@@ -312,38 +313,50 @@ func generateColumns(files []string, checked map[int]bool, cursor int, scrollOff
 
 // Define the view
 func (m model) View() string {
-	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#ff5f00")).Padding(1).Align(lipgloss.Center)
-	bodyStyle := lipgloss.NewStyle().Padding(1, 2)
+	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#fe6375")).Padding(1).Align(lipgloss.Center)
+	bodyStyle := lipgloss.NewStyle().Padding(1)
+
+	countStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#64aef8")).Underline(true)
+
+	repoStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#f8b064")).Underline(true)
+
+	pathStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#a496ff")).Underline(true)
+
+	// Apply styles
+	fileCount := countStyle.Render(strconv.Itoa(len(m.selectedFiles)))
+	repoName := repoStyle.Render(m.repoInput.Value())
+	destinationPath := pathStyle.Render(m.path)
+
 	switch m.state {
 	case inputRepo:
 		return lipgloss.JoinVertical(lipgloss.Top,
 			headerStyle.Render("Download"),
-			bodyStyle.Render(fmt.Sprintf("%s\n\n%s\n\n%s", "Enter Repo Name:", m.repoInput.View(), "Press Enter to confirm, Q to quit")),
+			bodyStyle.Render(fmt.Sprintf("%s\n\n%s\n\n%s", "Enter Repo Name:", m.repoInput.View(), "Press Enter to confirm")),
 		)
 
 	case selectFiles:
 		columns := generateColumns(m.files, m.checked, m.cursorIndex, m.scrollOffset)
 		return lipgloss.JoinVertical(lipgloss.Top,
 			headerStyle.Render("Select Files"),
-			bodyStyle.BorderStyle(lipgloss.RoundedBorder()).Render(columns+fmt.Sprintf("\nPage %d/%d\n[SPACE] Toggle Select  [A] Toggle All  [←/→] Move  [↑/↓] Move  [ Scroll-Left  ] Scroll-Right  [ENTER] Confirm  [q] Quit", m.scrollOffset+1, (len(m.files)+filesPerColumn-1)/filesPerColumn)),
+			bodyStyle.BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#f88e64")).Render(columns+fmt.Sprintf("\nPage %d/%d\n[SPACE] Toggle Select  [A] Toggle All  [←/→] Move  [↑/↓] Move  [ Scroll-Left  ] Scroll-Right  [ENTER] Confirm  ", m.scrollOffset+1, (len(m.files)+filesPerColumn-1)/filesPerColumn)),
 		)
 
 	case selectDownloadPath:
 		return lipgloss.JoinVertical(lipgloss.Top,
 			headerStyle.Render("Select Download Path"),
-			bodyStyle.BorderStyle(lipgloss.RoundedBorder()).Render(fmt.Sprintf("[1] Default (Downloads/hfmodels/%s)\n[2] Current-Directory (%s)", m.repoInput.Value(), m.repoInput.Value())),
-			bodyStyle.Render(fmt.Sprintf("Current Choice: %s\nPress ENTER to confirm, Q to quit", m.downloadPathChoice)),
+			bodyStyle.BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#f88e64")).Render(fmt.Sprintf("[1] Default (Downloads/hfmodels/%s)\n[2] Current-Directory (%s)", m.repoInput.Value(), m.repoInput.Value())),
+			bodyStyle.Render(fmt.Sprintf("Current Choice: %s\nPress ENTER to confirm", m.downloadPathChoice)),
 		)
 
 	case confirmation:
 		return lipgloss.JoinVertical(lipgloss.Top,
 			headerStyle.Render("Confirmation"),
-			bodyStyle.Render(fmt.Sprintf("Downloading %d files from %s to %s\n\nPress Enter to start, Q to quit", len(m.selectedFiles), m.repoInput.Value(), m.path)),
+			bodyStyle.BorderStyle(lipgloss.RoundedBorder()).Render(fmt.Sprintf("Downloading %s files from %s to %s\n\nPress Enter to start, Q to quit", fileCount, repoName, destinationPath)),
 		)
 
 	case downloading:
 		return lipgloss.JoinVertical(lipgloss.Top,
-			headerStyle.Render("Downloading..."),
+			headerStyle.BorderStyle(lipgloss.RoundedBorder()).Render(fmt.Sprintf("Downloading %s files from %s to %s\n", fileCount, repoName, destinationPath)),
 			bodyStyle.Render(m.progress.View()),
 			bodyStyle.Render(m.status),
 		)
