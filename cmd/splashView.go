@@ -15,8 +15,8 @@ type Splashmodel struct {
 	selected bool
 }
 
-func InitialSplashModel() Splashmodel {
-	return Splashmodel{cursor: 0, selected: false}
+func InitialSplashModel() *Splashmodel { // Return a pointer to Splashmodel
+	return &Splashmodel{cursor: 0, selected: false} // Return an address
 }
 
 func rainbow(base lipgloss.Style, s string, colors []color.Color) string {
@@ -28,22 +28,22 @@ func rainbow(base lipgloss.Style, s string, colors []color.Color) string {
 	return str
 }
 
-func (m Splashmodel) Init() tea.Cmd {
+func (m *Splashmodel) Init() tea.Cmd {
 	return nil
 }
 
-func (m Splashmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *Splashmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q":
 			return m, tea.Quit
-		case "up":
+		case "up", "k":
 			if m.cursor > 0 {
 				m.cursor--
 			}
-		case "down":
-			if m.cursor < 1 {
+		case "down", "j":
+			if m.cursor < 1 { // This is correct since we have 2 choices (0 and 1)
 				m.cursor++
 			}
 		case "enter":
@@ -53,12 +53,12 @@ func (m Splashmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m Splashmodel) View() string {
+func (m *Splashmodel) View() string {
 	// Gradient Header
 	blends := gamut.Blends(lipgloss.Color("#FD5392"), lipgloss.Color("#F86F64"), 50)
 	titleStyle := lipgloss.NewStyle().Align(lipgloss.Center).Bold(true)
-	firstln := titleStyle.Align(lipgloss.Center).Render(rainbow(lipgloss.NewStyle(), "Easily browse, download, and manage HuggingFace", blends))
-	secondln := titleStyle.Align(lipgloss.Center).Render(rainbow(lipgloss.NewStyle(), "models & datasets right from your terminal.", blends))
+	firstln := titleStyle.Render(rainbow(lipgloss.NewStyle(), "Easily browse, download, and manage HuggingFace", blends))
+	secondln := titleStyle.Render(rainbow(lipgloss.NewStyle(), "models & datasets right from your terminal.", blends))
 
 	// Column styles
 	columnStyle := lipgloss.NewStyle().Width(45)
@@ -67,6 +67,7 @@ func (m Splashmodel) View() string {
 
 	textStyleCheck := lipgloss.NewStyle().Foreground(lipgloss.Color("#F88E64"))
 	textStyleXMark := lipgloss.NewStyle().Foreground(lipgloss.Color("#FE6375"))
+
 	leftColumn := []string{
 		fmt.Sprintf("%s %s", check, textStyleCheck.Render("Browse public models & datasets")),
 		fmt.Sprintf("%s %s", check, textStyleCheck.Render("Download public models")),
@@ -97,15 +98,21 @@ func (m Splashmodel) View() string {
 
 	columns := lipgloss.JoinHorizontal(lipgloss.Center, columnStyle.Render(leftView), columnStyle.Render(rightView))
 
-	// Yes/No selection
+	// Yes/No selection styling
 	choices := []string{"Yes", "No"}
 	selection := "Would you like to login?\n\n"
+	selectedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00")).Bold(true)
+
 	for i, choice := range choices {
-		cursor := " "
+		cursor := "  " // Default spacing
+		displayChoice := lipgloss.NewStyle().Render(choice)
+
 		if m.cursor == i {
-			cursor = ">"
+			cursor = "👉"                                 // Visually indicate selection
+			displayChoice = selectedStyle.Render(choice) // Highlight the selected choice
 		}
-		selection += fmt.Sprintf("%s %s\n", cursor, choice)
+
+		selection += fmt.Sprintf("%s %s\n", cursor, displayChoice)
 	}
 
 	return fmt.Sprintf("\n%s\n%s\n\n%s\n\n%s\n\n%s", firstln, secondln, lipgloss.NewStyle().Render("Some Actions Require Login"), columns, selection)

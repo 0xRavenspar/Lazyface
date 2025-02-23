@@ -48,11 +48,6 @@ var (
 
 	errorStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#FF0000"))
-
-	containerStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("230")).
-			Padding(1)
 )
 
 // pasteFromClipboard is a command that reads from the clipboard
@@ -221,19 +216,15 @@ func (a AuthView) View() string {
 	}
 
 	// Calculate available space
-	availWidth := max(0, a.width-4)
-	availHeight := max(0, a.height-4)
 
 	// Combine all elements
 	mainContent := fmt.Sprintf("%s\n%s\n%s", help, title, content)
-	mainContent = containerStyle.Width(availWidth).Height(availHeight).Render(mainContent)
 
 	s.WriteString(mainContent)
 
 	// Footer with safe padding calculation
 	footer := "Esc/Back Home"
-	padding := max(0, availWidth-len(footer))
-	s.WriteString("\n" + strings.Repeat(" ", padding) + footer)
+	s.WriteString("\n" + footer)
 
 	return s.String()
 }
