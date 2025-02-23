@@ -5,6 +5,7 @@ import (
 	"Lazyface/internal/cli"
 	"fmt"
 	"os"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -13,6 +14,8 @@ import (
 var (
 	mainContentStyle = lipgloss.NewStyle().Padding(1, 2).Border(lipgloss.RoundedBorder()).Width(80)
 )
+
+type tickMsg time.Time
 
 type model struct {
 	views           []tea.Model
@@ -24,26 +27,45 @@ type model struct {
 	showSplash      bool
 	isAuthenticated bool
 	hasUserData     bool
+	animationModel  cmd.AnimateModel
+	showAnimation   bool
 }
 
 func initialModel() model {
 	var err error
-	// Try initializing SettingsModel and check if user data exists
-	hasUserData := err == nil // If no error, assume user data exists
+	_, err = cli.LoadUserData()
+	hasUserData := err == nil // Check if user data exists
 
-	return model{
-		views: []tea.Model{
-			cmd.InitialSplashModel(), // Store as a pointer
-		},
-		activeView:   0,
-		navigationUI: cmd.NavigationModel{},
-		footerUI:     cmd.FooterModel{},
-		showSplash:   true, // Start with splash screen
-		hasUserData:  hasUserData,
+	m := model{
+		navigationUI:    cmd.NavigationModel{},
+		footerUI:        cmd.FooterModel{},
+		hasUserData:     hasUserData,
+		isAuthenticated: hasUserData, // Assume authenticated if user data exists
+		animationModel:  cmd.NewAnimateModel(),
 	}
+
+	if hasUserData {
+		// Skip splash and animation, go directly to the main views
+		m.showSplash = false
+		m.showAnimation = false
+		m.loadMainViews()
+	} else {
+		// Show splash and animation
+		m.showSplash = true
+		m.showAnimation = true
+		m.views = []tea.Model{cmd.InitialSplashModel()}
+	}
+
+	return m
 }
 
 func (m model) Init() tea.Cmd {
+	if m.showAnimation {
+		// Show the animation for 3 seconds (adjust as needed)
+		return tea.Tick(3*time.Second, func(t time.Time) tea.Msg {
+			return tickMsg(t)
+		})
+	}
 	return nil
 }
 
@@ -76,12 +98,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		mainContentStyle = mainContentStyle.Width(m.width - 4)
 		m.navigationUI.Width = m.width // Update navigation width dynamically
+	case tickMsg:
+		if m.showAnimation {
+			m.showAnimation = false
+			m.showSplash = true
+		}
 	}
 
 	if !m.showSplash {
 		updatedView, cmd := m.views[m.activeView].Update(msg)
 		m.views[m.activeView] = updatedView
-		m.navigationUI.ActiveView = m.activeView // Ensure navigation updates
+		m.navigationUI.ActiveView = m.activeView
 		return m, cmd
 	}
 
@@ -98,19 +125,16 @@ func (m *model) loadMainViews() {
 
 	if m.isAuthenticated {
 		if m.hasUserData {
-			// Authenticated & userData present -> No Auth View, include Settings
 			views = append(views, cmd.InitialUploadModel(), cmd.InitialManageModel())
 
 			settingsModel, _ := cmd.InitialSettingsModel()
 			views = append(views, settingsModel)
 			viewNames = append(viewNames, "Upload", "Manage", "Settings")
 		} else {
-			// Authenticated but no userData -> Show Auth View, no Settings
 			views = append(views, cmd.NewAuthView(), cmd.InitialUploadModel(), cmd.InitialManageModel())
 			viewNames = append(viewNames, "Auth", "Upload", "Manage")
 		}
 	} else {
-		// Not authenticated -> Show only Download and Auth View
 		views = append(views, cmd.InitialDownloadModel(), cmd.NewAuthView())
 		viewNames = append(viewNames, "Download", "Auth")
 	}
@@ -121,8 +145,11 @@ func (m *model) loadMainViews() {
 }
 
 func (m model) View() string {
+	if m.showAnimation {
+		return mainContentStyle.Render(m.animationModel.View())
+	}
 	if m.showSplash {
-		return mainContentStyle.Render(m.views[0].View()) // Render only splash screen
+		return mainContentStyle.Render(m.views[0].View())
 	}
 
 	return lipgloss.JoinVertical(
