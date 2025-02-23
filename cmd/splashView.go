@@ -100,7 +100,7 @@ func (m *Splashmodel) View() string {
 
 	// Yes/No selection styling
 	choices := []string{"Yes", "No"}
-	selection := "Would you like to login?\n\n"
+	selection := "Would you like to login?(y/n)\n\n"
 	selectedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00")).Bold(true)
 
 	for i, choice := range choices {
