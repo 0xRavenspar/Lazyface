@@ -125,11 +125,11 @@ func (m *model) loadMainViews() {
 
 	if m.isAuthenticated {
 		if m.hasUserData {
-			views = append(views, cmd.InitialUploadModel(), cmd.InitialManageModel())
+			views = append(views, cmd.InitialUploadModel(), cmd.InitialManageModel(), cmd.InitialDownloadModel())
 
 			settingsModel, _ := cmd.InitialSettingsModel()
 			views = append(views, settingsModel)
-			viewNames = append(viewNames, "Upload", "Manage", "Settings", "Download")
+			viewNames = append(viewNames, "Upload", "Manage", "Download", "Settings")
 		} else {
 			views = append(views, cmd.NewAuthView(), cmd.InitialUploadModel(), cmd.InitialManageModel())
 			viewNames = append(viewNames, "Auth", "Upload", "Manage", "Download")

@@ -92,7 +92,7 @@ func (a AuthView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case loginSuccessMsg:
 		a.isAuthenticating = false
-		return a, tea.Quit
+		return a, nil
 
 	case loginErrMsg:
 		a.isAuthenticating = false
