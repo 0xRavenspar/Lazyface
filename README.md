@@ -42,7 +42,7 @@ Alternatively, install it using:
 go install github.com/yourusername/lazyface@latest
 ```
 
-You can also download pre-built binaries from the [📥 GitHub Releases](https://github.com/0xRavenspar/Lazyface/releases) page.
+You can also download pre-built binaries from the [📥 GitHub Releases](https://github.com/0xRavenspar/Lazyface/releases/tag/alpha) page.
 
 ## 🚀 Usage
 
