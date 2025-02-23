@@ -30,4 +30,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	r := tea.NewProgram(
+		cmd.NewAuthView(),
+		// tea.WithAltScreen(),       // Use alternate screen buffer
+		tea.WithMouseCellMotion(), // Turn on mouse support
+	)
+
+	if _, err := r.Run(); err != nil {
+		fmt.Printf("Error running program: %v", err)
+		os.Exit(1)
+	}
+
 }
