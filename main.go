@@ -129,10 +129,10 @@ func (m *model) loadMainViews() {
 
 			settingsModel, _ := cmd.InitialSettingsModel()
 			views = append(views, settingsModel)
-			viewNames = append(viewNames, "Upload", "Manage", "Settings")
+			viewNames = append(viewNames, "Upload", "Manage", "Settings", "Download")
 		} else {
 			views = append(views, cmd.NewAuthView(), cmd.InitialUploadModel(), cmd.InitialManageModel())
-			viewNames = append(viewNames, "Auth", "Upload", "Manage")
+			viewNames = append(viewNames, "Auth", "Upload", "Manage", "Download")
 		}
 	} else {
 		views = append(views, cmd.InitialDownloadModel(), cmd.NewAuthView())
